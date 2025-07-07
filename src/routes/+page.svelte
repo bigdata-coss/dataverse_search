@@ -924,6 +924,103 @@
 					</div>
 				</div>
 			</section>
+		{:else if searchResults !== null}
+			<!-- 검색 결과가 없는 경우 -->
+			<section class="max-w-6xl mx-auto mb-12">
+				<div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8 text-center">
+					<div class="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+						<Search class="w-12 h-12 text-orange-400" aria-hidden="true" />
+					</div>
+					
+					<h2 class="text-2xl font-semibold text-white mb-4">
+						검색 결과가 없습니다
+					</h2>
+					
+					<div class="max-w-md mx-auto mb-6">
+						<p class="text-white/80 mb-4">
+							"{searchQuery}"에 대한 검색 결과를 찾을 수 없습니다.
+						</p>
+						
+						<!-- 현재 검색 범위 표시 -->
+						<div class="flex items-center justify-center gap-2 text-sm text-white/70 mb-4">
+							<MapPin class="w-4 h-4 text-green-400" />
+							<span>검색 범위: </span>
+							{#if selectedSpecificInstance && selectedInstanceInfo}
+								<span class="text-cyan-400 font-medium">
+									{selectedInstanceInfo.platformName} ({selectedInstanceInfo.country})
+								</span>
+							{:else}
+								<span class="text-green-400 font-medium">{selectedCountry}</span>
+								<span class="text-white/50">
+									({filteredInstances.length}개 인스턴스)
+								</span>
+							{/if}
+						</div>
+					</div>
+					
+					<!-- 검색 제안 -->
+					<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+						<h3 class="text-lg font-medium text-blue-400 mb-3">💡 검색 팁</h3>
+						<ul class="text-white/80 text-sm space-y-2 text-left">
+							<li>• 다른 키워드나 유사한 용어를 사용해보세요</li>
+							<li>• 검색어를 단순화하거나 더 구체적으로 해보세요</li>
+							<li>• 영어 키워드를 시도해보세요 (예: "COVID-19", "climate change")</li>
+							<li>• 다른 국가나 인스턴스에서 검색해보세요</li>
+							<li>• 고급 검색 옵션에서 검색 필드를 변경해보세요</li>
+						</ul>
+					</div>
+					
+					<!-- 다른 인스턴스에서 검색 버튼 -->
+					<div class="mb-6">
+						<h4 class="text-white/90 font-medium mb-3">다른 Dataverse 인스턴스에서 검색해보세요:</h4>
+						<div class="flex flex-wrap gap-2 justify-center">
+							{#each allInstances.filter(instance => instance.url !== selectedSpecificInstance).slice(0, 6) as instance (instance.id)}
+								<button
+									type="button"
+									onclick={() => searchInInstance(instance)}
+									class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-sm rounded-lg transition-colors duration-200 flex items-center gap-2"
+									disabled={isLoading}
+								>
+									<Globe class="w-4 h-4" />
+									{instance.country} - {instance.platformName.split(' ')[0]}
+								</button>
+							{/each}
+						</div>
+					</div>
+					
+					<!-- 액션 버튼들 -->
+					<div class="flex flex-wrap items-center justify-center gap-4">
+						<button
+							type="button"
+							onclick={() => {
+								searchQuery = '';
+								searchResults = null;
+								currentPage = 1;
+								totalResults = 0;
+								filteredResults = [];
+								resultFilterQuery = '';
+							}}
+							class="px-6 py-3 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 rounded-lg transition-colors duration-200 flex items-center gap-2"
+						>
+							<Search class="w-4 h-4" />
+							새로운 검색
+						</button>
+						
+						<button
+							type="button"
+							onclick={() => {
+								selectedCountry = 'USA';
+								selectedSpecificInstance = 'https://dataverse.harvard.edu';
+								currentPage = 1;
+							}}
+							class="px-6 py-3 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors duration-200 flex items-center gap-2"
+						>
+							<Globe class="w-4 h-4" />
+							Harvard Dataverse에서 검색
+						</button>
+					</div>
+				</div>
+			</section>
 		{/if}
 
 		<!-- 지원 인스턴스 목록 -->
