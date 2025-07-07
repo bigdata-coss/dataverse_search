@@ -1,0 +1,326 @@
+@import "tailwindcss";
+
+/* Tailwind CSS v4 커스텀 속성 정의 */
+@theme {
+	--font-family-inter: 'Inter', system-ui, sans-serif;
+	
+	/* Vision Pro 스타일 컬러 팔레트 */
+	--color-glass-50: rgba(255, 255, 255, 0.1);
+	--color-glass-100: rgba(255, 255, 255, 0.2);
+	--color-glass-200: rgba(255, 255, 255, 0.3);
+	--color-glass-300: rgba(255, 255, 255, 0.4);
+	--color-glass-400: rgba(255, 255, 255, 0.5);
+	
+	--color-dark-50: rgba(0, 0, 0, 0.1);
+	--color-dark-100: rgba(0, 0, 0, 0.2);
+	--color-dark-200: rgba(0, 0, 0, 0.3);
+	--color-dark-300: rgba(0, 0, 0, 0.4);
+	--color-dark-400: rgba(0, 0, 0, 0.5);
+	
+	/* 커스텀 애니메이션 */
+	--animate-float: float 6s ease-in-out infinite;
+	--animate-glow: glow 2s ease-in-out infinite alternate;
+	
+	/* 백드롭 블러 확장 */
+	--backdrop-blur-4xl: 72px;
+}
+
+/* 키프레임 정의 */
+@keyframes float {
+	0%, 100% { transform: translateY(0px); }
+	50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+	from { box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
+	to { box-shadow: 0 0 30px rgba(56, 189, 248, 0.6); }
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+/* 기본 스타일 */
+html {
+	font-family: var(--font-family-inter);
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 58 138) 35%, rgb(67 56 202) 100%);
+	min-height: 100vh;
+}
+
+/* 스크린리더 전용 클래스 */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.sr-only:focus {
+	position: static;
+	width: auto;
+	height: auto;
+	padding: inherit;
+	margin: inherit;
+	overflow: visible;
+	clip: auto;
+	white-space: normal;
+}
+
+/* 글래스모피즘 컴포넌트 */
+.glass-card {
+	background: rgba(255, 255, 255, 0.08);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 16px;
+	box-shadow: 
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-card:hover {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.2);
+	transform: translateY(-2px);
+	box-shadow: 
+		0 12px 40px rgba(0, 0, 0, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-input {
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--color-glass-50);
+	border-radius: 0.75rem;
+	padding: 0.75rem 1rem;
+	color: white;
+	transition: all 0.3s ease;
+}
+
+.glass-input::placeholder {
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.glass-input:focus {
+	background: var(--color-glass-50);
+	border-color: rgba(6, 182, 212, 0.5);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+}
+
+.glass-button {
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	background: var(--color-glass-50);
+	border: 1px solid var(--color-glass-100);
+	border-radius: 0.75rem;
+	padding: 0.75rem 1.5rem;
+	color: white;
+	transition: all 0.3s ease;
+	cursor: pointer;
+}
+
+.glass-button:hover {
+	background: var(--color-glass-100);
+	border-color: var(--color-glass-200);
+}
+
+.glass-button:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+}
+
+/* 커스텀 버튼 스타일은 Tailwind CSS v4와 충돌하므로 제거
+   대신 인라인 클래스나 glass-button 클래스 사용 */
+
+/* 로딩 스피너 */
+.loading-spinner {
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-left-color: #00d4ff;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+/* 애니메이션 클래스 */
+.floating {
+	animation: var(--animate-float);
+}
+
+.glow {
+	animation: var(--animate-glow);
+}
+
+/* 커스텀 스크롤바 */
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background-color: rgba(255, 255, 255, 0.3);
+	border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 그라데이션 텍스트 */
+.gradient-text {
+	background: linear-gradient(135deg, #00d4ff 0%, #0099ff 50%, #0066ff 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+/* 배경 패턴 */
+.dot-pattern {
+	background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+	background-size: 20px 20px;
+}
+
+/* 카드 호버 효과 */
+.card-hover {
+	transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+	transform: scale(1.05);
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 텍스트 줄 제한 */
+.line-clamp-2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.line-clamp-3 {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* 포커스 스타일 개선 */
+.focus\:ring-cyan-400:focus {
+	--tw-ring-color: rgb(34 211 238);
+	box-shadow: 0 0 0 2px var(--tw-ring-color);
+}
+
+/* 커스텀 select 스타일 */
+select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+	background-position: right 0.5rem center;
+	background-repeat: no-repeat;
+	background-size: 1.5em 1.5em;
+	padding-right: 2.5rem;
+}
+
+select option {
+	background-color: rgb(15 23 42);
+	color: white;
+}
+
+/* 버튼 호버 효과 */
+button:hover {
+	transition: all 0.2s ease-in-out;
+}
+
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+button:disabled:hover {
+	transform: none !important;
+}
+
+/* 반응형 그리드 */
+@media (max-width: 768px) {
+	.container {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+	
+	.glass-card {
+		border-radius: 12px;
+		padding: 1rem;
+	}
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+	html {
+		color-scheme: dark;
+	}
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+	animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 스크롤바 스타일링 */
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.5);
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+} 

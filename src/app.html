@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		
+		<!-- Vision Pro 스타일 UI를 위한 메타 태그 -->
+		<meta name="theme-color" content="#0891b2" />
+		<meta name="color-scheme" content="dark light" />
+		
+		<!-- SEO 및 소셜 미디어 메타 태그 -->
+		<meta name="description" content="전 세계 Dataverse 검색 및 AI 분석 플랫폼" />
+		<meta name="keywords" content="dataverse, research data, ai, search, snu" />
+		<meta name="author" content="ELPAI Team" />
+		
+		<!-- Open Graph -->
+		<meta property="og:title" content="Dataverse MCP Server" />
+		<meta property="og:description" content="전 세계 Dataverse 검색 및 AI 분석 플랫폼" />
+		<meta property="og:type" content="website" />
+		
+		<!-- 폰트 -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+		
+		%sveltekit.head%
+	</head>
+	<body 
+		data-sveltekit-preload-data="hover" 
+		class="h-full font-inter antialiased"
+	>
+		<!-- 접근성을 위한 스킵 링크 -->
+		<a 
+			href="#main-content"
+			class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 
+			       bg-cyan-600 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400"
+		>
+			메인 콘텐츠로 건너뛰기
+		</a>
+		
+		<!-- 메인 앱 컨테이너 -->
+		<div id="app" class="h-full">%sveltekit.body%</div>
+		
+		<!-- Vision Pro 스타일 배경 효과 -->
+		<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+			<div class="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl floating"></div>
+			<div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl floating" style="animation-delay: 2s;"></div>
+			<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl floating" style="animation-delay: 4s;"></div>
+		</div>
+	</body>
+</html>
