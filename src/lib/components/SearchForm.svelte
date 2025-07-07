@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Search, Settings, ChevronDown, ChevronUp } from 'lucide-svelte';
+	import { t } from '$lib/stores/language.js';
 	
 	interface Props {
 		searchQuery: string;
@@ -89,14 +90,14 @@
 
 <!-- 검색 입력 -->
 <div class="relative mb-6">
-	<label for="search-input" class="sr-only">검색어 입력</label>
+	<label for="search-input" class="sr-only">{t('search.input_label')}</label>
 	<input
 		id="search-input"
 		type="text"
 		bind:value={searchQuery}
 		oninput={handleSearchInput}
 		onkeydown={handleKeyDown}
-		placeholder="연구 주제, 키워드, 저자명을 입력하세요... (예: COVID-19, 기후변화, 경제 데이터)"
+		placeholder={t('search.placeholder')}
 		class="w-full text-lg pl-16 pr-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 		disabled={isLoading}
 	/>
@@ -112,7 +113,7 @@
 		disabled={isLoading}
 	>
 		<Settings class="w-4 h-4" />
-		고급 검색 옵션
+		{t('search.advanced.toggle')}
 		{#if showAdvanced}
 			<ChevronUp class="w-4 h-4" />
 		{:else}
@@ -127,7 +128,7 @@
 				<!-- 검색 필드 -->
 				<div>
 					<label for="search-field" class="block text-white/80 text-sm mb-2 font-medium">
-						🎯 검색 필드
+						🎯 {t('search.advanced.field')}
 					</label>
 					<select
 						id="search-field"
@@ -136,17 +137,17 @@
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 						disabled={isLoading}
 					>
-						<option value="all">🔍 전체 검색</option>
-						<option value="title">📝 제목만</option>
-						<option value="author">👤 저자만</option>
-						<option value="subject">📚 주제만</option>
+						<option value="all">🔍 {t('search.advanced.field_all')}</option>
+						<option value="title">📝 {t('search.advanced.field_title')}</option>
+						<option value="author">👤 {t('search.advanced.field_author')}</option>
+						<option value="subject">📚 {t('search.advanced.field_subject')}</option>
 					</select>
 				</div>
 
 				<!-- 정렬 기준 -->
 				<div>
 					<label for="sort-by" class="block text-white/80 text-sm mb-2 font-medium">
-						📊 정렬 기준
+						📊 {t('search.advanced.sort')}
 					</label>
 					<select
 						id="sort-by"
@@ -155,15 +156,15 @@
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 						disabled={isLoading}
 					>
-						<option value="date">📅 날짜순</option>
-						<option value="name">🔤 이름순</option>
+						<option value="date">📅 {t('search.advanced.sort_date')}</option>
+						<option value="name">🔤 {t('search.advanced.sort_name')}</option>
 					</select>
 				</div>
 
 				<!-- 정렬 순서 -->
 				<div>
 					<label for="sort-order" class="block text-white/80 text-sm mb-2 font-medium">
-						⬆️ 정렬 순서
+						⬆️ {t('search.advanced.order')}
 					</label>
 					<select
 						id="sort-order"
@@ -172,8 +173,8 @@
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 						disabled={isLoading}
 					>
-						<option value="desc">⬇️ 내림차순 (최신부터)</option>
-						<option value="asc">⬆️ 오름차순 (오래된것부터)</option>
+						<option value="desc">⬇️ {t('search.advanced.order_desc')}</option>
+						<option value="asc">⬆️ {t('search.advanced.order_asc')}</option>
 					</select>
 				</div>
 			</div>
@@ -183,14 +184,14 @@
 				<!-- 시작 년도 -->
 				<div>
 					<label for="start-year" class="block text-white/80 text-sm mb-2 font-medium">
-						📅 시작 년도
+						📅 {t('search.advanced.start_year')}
 					</label>
 					<input
 						id="start-year"
 						type="number"
 						bind:value={startYear}
 						onchange={(e) => handleNumberChange('startYear', e)}
-						placeholder="예: 2020"
+						placeholder={t('search.advanced.start_year_placeholder')}
 						min="1900"
 						max="2024"
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
@@ -201,14 +202,14 @@
 				<!-- 종료 년도 -->
 				<div>
 					<label for="end-year" class="block text-white/80 text-sm mb-2 font-medium">
-						📅 종료 년도
+						📅 {t('search.advanced.end_year')}
 					</label>
 					<input
 						id="end-year"
 						type="number"
 						bind:value={endYear}
 						onchange={(e) => handleNumberChange('endYear', e)}
-						placeholder="예: 2024"
+						placeholder={t('search.advanced.end_year_placeholder')}
 						min="1900"
 						max="2024"
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
@@ -219,7 +220,7 @@
 				<!-- 페이지 크기 -->
 				<div>
 					<label for="results-per-page" class="block text-white/80 text-sm mb-2 font-medium">
-						📄 페이지당 결과 수
+						📄 {t('search.advanced.results_per_page')}
 					</label>
 					<select
 						id="results-per-page"
@@ -228,10 +229,10 @@
 						class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 						disabled={isLoading}
 					>
-						<option value={10}>📋 10개씩</option>
-						<option value={20}>📋 20개씩</option>
-						<option value={50}>📋 50개씩</option>
-						<option value={100}>📋 100개씩</option>
+						<option value={10}>📋 10{t('ui.count_suffix')}</option>
+						<option value={20}>📋 20{t('ui.count_suffix')}</option>
+						<option value={50}>📋 50{t('ui.count_suffix')}</option>
+						<option value={100}>📋 100{t('ui.count_suffix')}</option>
 					</select>
 				</div>
 			</div>
@@ -248,7 +249,7 @@
 						disabled={isLoading}
 					/>
 					<span class="flex items-center gap-2">
-						📁 파일 정보 포함
+						📁 {t('search.advanced.include_files')}
 					</span>
 				</label>
 
@@ -259,7 +260,7 @@
 					class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-sm rounded-lg transition-colors duration-200 flex items-center gap-2"
 					disabled={isLoading}
 				>
-					🔄 옵션 초기화
+					🔄 {t('search.advanced.reset')}
 				</button>
 			</div>
 		</div>
@@ -275,9 +276,9 @@
 >
 	{#if isLoading}
 		<div class="loading-spinner w-5 h-5" aria-hidden="true"></div>
-		검색 중...
+		{t('common.loading')}
 	{:else}
 		<Search class="w-5 h-5" aria-hidden="true" />
-		검색하기
+		{t('search.button')}
 	{/if}
 </button> 

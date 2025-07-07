@@ -122,7 +122,32 @@ export class DataverseClient {
 					throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
 				}
 
-				const data = await response.json();
+				// Content-Type 확인 및 안전한 JSON 파싱
+				const contentType = response.headers.get('content-type') || '';
+				debugLog(`응답 Content-Type: ${contentType}`);
+
+				// 모든 응답을 text로 먼저 읽은 후 JSON 파싱 시도
+				const responseText = await response.text();
+				let data: any;
+				
+				try {
+					// JSON 파싱 시도
+					data = JSON.parse(responseText);
+					debugLog(`JSON 파싱 성공`);
+				} catch (jsonError) {
+					debugError(`JSON 파싱 오류:`, jsonError);
+					debugError(`응답 Content-Type: ${contentType}`);
+					debugError(`응답 내용 (첫 500자):`, responseText.substring(0, 500));
+					
+					// HTML/XML 응답 확인
+					if (responseText.includes('<?xml') || responseText.includes('<!DOCTYPE html') || responseText.includes('<html')) {
+						const responseType = responseText.includes('<?xml') ? 'XML' : 'HTML';
+						throw new Error(`Server returned ${responseType} instead of JSON. This may indicate an unsupported Dataverse version or server configuration issue.`);
+					}
+					
+					// 그 외의 경우 일반적인 JSON 파싱 오류로 처리
+					throw new Error(`Invalid JSON response from Dataverse API. Content-Type: ${contentType}. Error: ${jsonError instanceof Error ? jsonError.message : 'Unknown JSON error'}`);
+				}
 
 				debugLog(`API 응답 받음:`, {
 					status: data?.status,

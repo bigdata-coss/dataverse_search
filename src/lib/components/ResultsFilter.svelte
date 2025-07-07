@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Search } from 'lucide-svelte';
+	// 다국어 지원 추가
+	import { t } from '$lib/stores/language.js';
 	
 	interface Props {
 		filterQuery: string;
@@ -41,7 +43,7 @@
 			bind:value={filterQuery}
 			oninput={handleInput}
 			onkeydown={handleKeyDown}
-			placeholder="결과내 검색 (제목, 저자, 주제별 필터링) - Enter로 재검색"
+			placeholder={t('filter.placeholder')}
 			class="w-full pl-12 pr-24 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm"
 			disabled={isLoading}
 		/>
@@ -55,7 +57,7 @@
 					onclick={onReSearch}
 					class="px-2 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 text-xs rounded transition-colors duration-200"
 					disabled={isLoading}
-					title="API로 재검색"
+					title={t('filter.search_tooltip')}
 				>
 					🔍
 				</button>
@@ -64,7 +66,7 @@
 					type="button"
 					onclick={handleClear}
 					class="px-2 py-1 text-white/40 hover:text-white/80 text-xs"
-					title="지우기"
+					title={t('filter.clear_tooltip')}
 				>
 					✕
 				</button>
@@ -74,10 +76,10 @@
 	
 	{#if filterQuery && filteredCount !== totalCount}
 		<div class="mt-2 text-xs text-white/60">
-			📊 {filteredCount}개 결과가 필터링됨 (전체 {totalCount}개 중)
+			📊 {t('filter.filtered_info', { filtered: filteredCount, total: totalCount })}
 			{#if filterQuery.trim()}
 				<span class="text-white/40 ml-2">
-					• Enter 키나 🔍 버튼으로 API 재검색 가능
+					• {t('filter.api_search_hint')}
 				</span>
 			{/if}
 		</div>

@@ -1,4 +1,7 @@
 <script lang="ts">
+	// 다국어 지원 추가
+	import { t } from '$lib/stores/language.js';
+	
 	interface Props {
 		currentPage: number;
 		totalPages: number;
@@ -68,14 +71,13 @@
 		<div class="flex flex-wrap items-center justify-between gap-4">
 			<!-- 페이지 정보 -->
 			<div class="text-sm text-white/80">
-				📄 페이지 <span class="text-cyan-400 font-medium">{currentPage}</span> / 
-				<span class="text-cyan-400 font-medium">{totalPages}</span>
-				(총 <span class="text-green-400 font-medium">{totalResults.toLocaleString()}</span>개 결과)
+				📄 {t('pagination.page_info', { current: currentPage, total: totalPages })}
+				({t('pagination.total_results', { count: totalResults.toLocaleString() })})
 			</div>
 
 			<!-- 페이지 점프 -->
 			<div class="flex items-center gap-2">
-				<span class="text-xs text-white/60">페이지 이동:</span>
+				<span class="text-xs text-white/60">{t('pagination.page_jump_label')}</span>
 				<input
 					type="number"
 					bind:value={pageJumpValue}
@@ -91,13 +93,13 @@
 					class="px-2 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 text-xs rounded transition-colors duration-200"
 					disabled={isLoading}
 				>
-					이동
+					{t('pagination.page_jump_button')}
 				</button>
 			</div>
 
 			<!-- 페이지 크기 변경 -->
 			<div class="flex items-center gap-2">
-				<span class="text-xs text-white/60">페이지 크기:</span>
+				<span class="text-xs text-white/60">{t('pagination.page_size_label')}</span>
 				<select
 					bind:value={resultsPerPage}
 					onchange={handlePageSizeChange}
@@ -121,7 +123,7 @@
 				disabled={currentPage === 1 || isLoading}
 				class="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white text-sm rounded transition-colors duration-200 flex items-center gap-1"
 			>
-				⏮️ 처음
+				⏮️ {t('pagination.first')}
 			</button>
 
 			<!-- 이전 페이지 -->
@@ -131,7 +133,7 @@
 				disabled={currentPage === 1 || isLoading}
 				class="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white text-sm rounded transition-colors duration-200 flex items-center gap-1"
 			>
-				⬅️ 이전
+				⬅️ {t('pagination.previous')}
 			</button>
 
 			<!-- 페이지 번호들 -->
@@ -157,7 +159,7 @@
 				disabled={currentPage === totalPages || isLoading}
 				class="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white text-sm rounded transition-colors duration-200 flex items-center gap-1"
 			>
-				다음 ➡️
+				{t('pagination.next')} ➡️
 			</button>
 
 			<!-- 마지막 페이지 -->
@@ -167,7 +169,7 @@
 				disabled={currentPage === totalPages || isLoading}
 				class="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 text-white text-sm rounded transition-colors duration-200 flex items-center gap-1"
 			>
-				마지막 ⏭️
+				{t('pagination.last')} ⏭️
 			</button>
 		</div>
 	</div>

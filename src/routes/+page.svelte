@@ -9,6 +9,10 @@
 	import SearchForm from '$lib/components/SearchForm.svelte';
 	import ResultsFilter from '$lib/components/ResultsFilter.svelte';
 	import Pagination from '$lib/components/Pagination.svelte';
+	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
+	
+	// 다국어 지원
+	import { currentLanguage, translations, t } from '$lib/stores/language.js';
 
 	// 검색 결과 타입 정의
 	interface SearchResultItem {
@@ -196,25 +200,25 @@
 					organization: selectedInstanceInfo.organization
 				};
 			} else {
-				// 국가별 검색
-				requestBody.country = selectedCountry;
-			}
-			
-			if (dev) {
-				console.log('요청 데이터:', requestBody);
-			}
-			
-			const response = await fetch('/api/mcp/search', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(requestBody)
-			});
-			
-			if (!response.ok) {
-				throw new Error(`검색 API 오류: ${response.status} ${response.statusText}`);
-			}
+						// 국가별 검색
+		requestBody.country = selectedCountry;
+	}
+	
+	if (dev) {
+		console.log('요청 데이터:', requestBody);
+	}
+	
+	const response = await fetch('/api/mcp/search', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(requestBody)
+	});
+	
+	if (!response.ok) {
+		throw new Error(t('errors.api_error', { status: response.status, message: response.statusText }));
+	}
 			
 			const data = await response.json();
 			
@@ -226,11 +230,11 @@
 				const results = data.results.map((item: any) => ({
 					id: item.id || `result-${Math.random()}`,
 					title: item.title || item.name || 'Untitled',
-					description: item.description || '설명이 없습니다.',
+					description: item.description || t('ui.no_description'),
 					url: item.url || '#',
 					type: item.type || 'dataset',
 					authors: item.authors || [],
-					instance: item.instance || '알 수 없음',
+					instance: item.instance || t('ui.unknown'),
 					instanceUrl: item.instanceUrl,
 					publishedAt: item.published_at,
 					subjects: item.subjects || []
@@ -268,7 +272,7 @@
 					});
 				}
 			} else {
-				throw new Error(data.message || '검색 결과를 가져올 수 없습니다.');
+				throw new Error(data.message || t('errors.no_results_fetch'));
 			}
 		} catch (error) {
 			if (dev) {
@@ -276,7 +280,7 @@
 			}
 			console.error('검색 오류:', error);
 			if (error instanceof Error) {
-				alert(`검색 중 오류가 발생했습니다: ${error.message}`);
+				alert(t('errors.search_error', { message: error.message }));
 			}
 		} finally {
 			isLoading = false;
@@ -368,21 +372,21 @@
 				if (endYear) requestBody.year_range.end = endYear;
 			}
 			
-			if (dev) {
-				console.log('특정 인스턴스 검색 요청:', requestBody);
-			}
-			
-			const response = await fetch('/api/mcp/search', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(requestBody)
-			});
-			
-			if (!response.ok) {
-				throw new Error(`검색 API 오류: ${response.status} ${response.statusText}`);
-			}
+					if (dev) {
+			console.log('특정 인스턴스 검색 요청:', requestBody);
+		}
+		
+		const response = await fetch('/api/mcp/search', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(requestBody)
+		});
+		
+		if (!response.ok) {
+			throw new Error(t('errors.api_error', { status: response.status, message: response.statusText }));
+		}
 			
 			const data = await response.json();
 			
@@ -394,7 +398,7 @@
 				const results = data.results.map((item: any) => ({
 					id: item.id || `result-${Math.random()}`,
 					title: item.title || item.name || 'Untitled',
-					description: item.description || '설명이 없습니다.',
+					description: item.description || t('ui.no_description'),
 					url: item.url || '#',
 					type: item.type || 'dataset',
 					authors: item.authors || [],
@@ -468,7 +472,7 @@
 			}
 			console.error('인스턴스별 검색 오류:', error);
 			if (error instanceof Error) {
-				alert(`${instance.platformName} 검색 중 오류가 발생했습니다: ${error.message}`);
+				alert(t('errors.instance_search_error', { instance: instance.platformName, message: error.message }));
 			}
 		} finally {
 			isLoading = false;
@@ -595,35 +599,40 @@
 </script>
 
 <svelte:head>
-	<title>Dataverse MCP Server - 전 세계 연구 데이터 AI 검색</title>
-	<meta name="description" content="AI 에이전트를 위한 전 세계 Dataverse 검색 및 분석 플랫폼" />
+	<title>{t('title')}</title>
+	<meta name="description" content={t('description')} />
 </svelte:head>
 
 <!-- 메인 컨테이너 -->
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
 	<div class="container mx-auto px-4 py-8">
 		<!-- 헤더 -->
-		<header class="text-center mb-12">
-			<h1 class="text-5xl font-bold text-white mb-4 gradient-text">
-				Dataverse MCP Server
-			</h1>
-			<p class="text-xl text-white/80 max-w-2xl mx-auto mb-8">
-				전 세계 {stats.active}개 연구 데이터 인스턴스를 AI의 힘으로 검색하고 분석하세요
-			</p>
+		<header class="text-center mb-12 relative">
+			<!-- 언어 선택기 -->
+			<div class="absolute top-0 right-0">
+				<LanguageSelector />
+			</div>
+			
+					<h1 class="text-5xl font-bold text-white mb-4 gradient-text">
+			{t('header.title')}
+		</h1>
+		<p class="text-xl text-white/80 max-w-2xl mx-auto mb-8">
+			{t('header.subtitle', { active: stats.active })}
+		</p>
 			
 			<!-- 실시간 상태 표시 -->
 			<div class="flex items-center justify-center gap-6 flex-wrap">
-				<div class="glass-card px-4 py-2 flex items-center gap-2">
-					<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-					<span class="text-white/90 text-sm">MCP 서버 활성</span>
-				</div>
+							<div class="glass-card px-4 py-2 flex items-center gap-2">
+				<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+				<span class="text-white/90 text-sm">{t('header.status.mcp_active')}</span>
+			</div>
 				<div class="glass-card px-4 py-2 flex items-center gap-2">
 					<Database class="w-4 h-4 text-cyan-400" />
-					<span class="text-white/90 text-sm">{stats.active}개 인스턴스</span>
+					<span class="text-white/90 text-sm">{t('header.status.instances', { active: stats.active })}</span>
 				</div>
 				<div class="glass-card px-4 py-2 flex items-center gap-2">
 					<Globe class="w-4 h-4 text-blue-400" />
-					<span class="text-white/90 text-sm">{stats.countriesCount}개국</span>
+					<span class="text-white/90 text-sm">{t('header.status.countries', { count: stats.countriesCount })}</span>
 				</div>
 			</div>
 		</header>
@@ -631,9 +640,9 @@
 		<!-- 검색 섹션 -->
 		<section class="max-w-6xl mx-auto mb-12">
 			<div class="glass-card p-8">
-				<h2 class="text-2xl font-semibold text-white mb-6 text-center">
-					연구 데이터 검색
-				</h2>
+							<h2 class="text-2xl font-semibold text-white mb-6 text-center">
+				{t('search.title')}
+			</h2>
 				
 				<!-- 인스턴스 선택기 -->
 				<InstanceSelector
@@ -688,9 +697,9 @@
 				<div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
 					<!-- 다른 Dataverse 인스턴스에서 검색 -->
 						<div class="mb-6 p-4 bg-blue-600/10 border border-blue-600/20 rounded-lg">
-							<h3 class="text-sm font-medium text-blue-400 mb-3 flex items-center gap-2">
-								🌍 다른 Dataverse 인스턴스에서 동일한 검색어로 검색
-							</h3>
+																	<h3 class="text-sm font-medium text-blue-400 mb-3 flex items-center gap-2">
+					🌍 {t('ui.search_other_instances')}
+				</h3>
 							<div class="flex flex-wrap gap-2">
 								{#each allInstances.filter(instance => instance.url !== selectedSpecificInstance).slice(0, showAllInstances ? allInstances.filter(instance => instance.url !== selectedSpecificInstance).length : 12) as instance (instance.id)}
 									<button
@@ -714,28 +723,28 @@
 										class="px-3 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 text-xs rounded-full transition-colors duration-200"
 										disabled={isLoading}
 									>
-										{#if showAllInstances}
-											축소하기
-										{:else}
-											+{allInstances.filter(instance => instance.url !== selectedSpecificInstance).length - 12}개 더
-										{/if}
+																										{#if showAllInstances}
+								{t('ui.show_less')}
+							{:else}
+								{t('ui.show_more', { count: allInstances.filter(instance => instance.url !== selectedSpecificInstance).length - 12 })}
+							{/if}
 									</button>
 								{/if}
 							</div>
-							<div class="mt-2 text-xs text-white/50">
-								💡 클릭하면 해당 인스턴스에서 "{searchQuery}" 검색이 실행됩니다.
-							</div>
+													<div class="mt-2 text-xs text-white/50">
+							💡 {t('ui.search_hint', { query: searchQuery })}
+						</div>
 						</div>
 					
 					<!-- 검색 결과 헤더 -->
 					<div class="mb-6">
 						<div class="flex flex-wrap items-center justify-between gap-4 mb-4">
 							<div class="flex flex-col gap-2">
-								<h2 class="text-xl font-semibold text-white flex items-center gap-3">
-									🎯 검색 결과
+															<h2 class="text-xl font-semibold text-white flex items-center gap-3">
+								🎯 {t('results.title')}
 									{#if searchResults?.total_count !== undefined}
 										<span class="text-cyan-400 text-lg">
-											{searchResults.total_count.toLocaleString()}개
+											{t('results.count', { count: searchResults.total_count })}
 										</span>
 									{/if}
 								</h2>
@@ -743,7 +752,7 @@
 								<!-- 현재 검색 범위 표시 -->
 								<div class="flex items-center gap-2 text-sm text-white/70">
 									<MapPin class="w-4 h-4 text-green-400" />
-									<span>검색 범위: </span>
+									<span>{t('results.search_scope')}: </span>
 									{#if selectedSpecificInstance && selectedInstanceInfo}
 										<span class="text-cyan-400 font-medium">
 											{selectedInstanceInfo.platformName} ({selectedInstanceInfo.country})
@@ -751,7 +760,7 @@
 									{:else}
 										<span class="text-green-400 font-medium">{selectedCountry}</span>
 										<span class="text-white/50">
-											({filteredInstances.length}개 인스턴스)
+											({t('results.instances_count', { count: filteredInstances.length })})
 										</span>
 									{/if}
 								</div>
@@ -770,7 +779,7 @@
 									class="px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-xs rounded-lg transition-colors duration-200 flex items-center gap-2"
 									disabled={isLoading || !searchResults?.items?.length}
 								>
-									📊 CSV 내보내기
+									📊 {t('results.actions.export_csv')}
 								</button>
 								<button
 									type="button"
@@ -784,7 +793,7 @@
 									class="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs rounded-lg transition-colors duration-200 flex items-center gap-2"
 									disabled={isLoading}
 								>
-									🗑️ 결과 지우기
+									🗑️ {t('results.actions.clear_results')}
 								</button>
 							</div>
 						</div>
@@ -807,10 +816,10 @@
 							<div class="grid md:grid-cols-3 gap-4 mb-4 text-sm">
 								<!-- 검색 전략 -->
 								{#if searchResults.metadata.search_strategy}
-									<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3">
-										<div class="flex items-center gap-2 text-blue-400 font-medium mb-1">
-											🎯 검색 전략
-										</div>
+																	<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3">
+									<div class="flex items-center gap-2 text-blue-400 font-medium mb-1">
+										🎯 {t('ui.search_strategy')}
+									</div>
 										<div class="text-white/80 capitalize">
 											{searchResults.metadata.search_strategy}
 										</div>
@@ -819,22 +828,22 @@
 
 								<!-- 검색 시간 -->
 								{#if searchResults.metadata.search_time}
-									<div class="bg-green-600/10 border border-green-600/20 rounded-lg p-3">
-										<div class="flex items-center gap-2 text-green-400 font-medium mb-1">
-											⏱️ 검색 시간
-										</div>
-										<div class="text-white/80">
-											{(searchResults.metadata.search_time * 1000).toFixed(0)}ms
-										</div>
+																									<div class="bg-green-600/10 border border-green-600/20 rounded-lg p-3">
+									<div class="flex items-center gap-2 text-green-400 font-medium mb-1">
+										⏱️ {t('ui.search_time')}
+									</div>
+									<div class="text-white/80">
+										{(searchResults.metadata.search_time * 1000).toFixed(0)}{t('ui.ms')}
+									</div>
 									</div>
 								{/if}
 
 								<!-- 적용된 필터 -->
 								{#if searchResults.metadata.applied_filters && searchResults.metadata.applied_filters.length > 0}
-									<div class="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3">
-										<div class="flex items-center gap-2 text-purple-400 font-medium mb-1">
-											🔧 적용된 필터
-										</div>
+																	<div class="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3">
+									<div class="flex items-center gap-2 text-purple-400 font-medium mb-1">
+										🔧 {t('ui.applied_filters')}
+									</div>
 										<div class="text-white/80 text-xs">
 											{searchResults.metadata.applied_filters.join(', ')}
 										</div>
@@ -846,7 +855,7 @@
 						<!-- 검색 제안 -->
 						{#if searchResults?.suggestions && searchResults.suggestions.length > 0}
 							<div class="mb-4">
-								<div class="text-sm text-white/80 mb-2">💡 검색 제안:</div>
+								<div class="text-sm text-white/80 mb-2">💡 {t('ui.search_suggestions')}:</div>
 								<div class="flex flex-wrap gap-2">
 									{#each (searchResults?.suggestions || []).slice(0, 6) as suggestion}
 										<button
@@ -882,10 +891,10 @@
 							}}
 						/>
 					{:else}
-						<!-- 클라이언트 필터링 중일 때 안내 메시지 -->
-						<div class="text-center py-4 text-white/60 text-sm">
-							💡 결과내 검색 중입니다. 페이지네이션은 API 재검색(🔍) 또는 필터 해제 후 이용 가능합니다.
-						</div>
+											<!-- 클라이언트 필터링 중일 때 안내 메시지 -->
+					<div class="text-center py-4 text-white/60 text-sm">
+						💡 {t('ui.pagination_info')}
+					</div>
 					{/if}
 
 					<!-- 검색 결과 카드들 -->
@@ -922,7 +931,7 @@
 								{#if result.authors && result.authors.length > 0}
 									<div class="mb-3 flex items-center gap-1">
 										<Users class="w-3 h-3 text-white/60" />
-										<span class="text-white/60 text-xs">저자: </span>
+										<span class="text-white/60 text-xs">{t('ui.author')}: </span>
 										<span class="text-white/80 text-xs">
 											{result.authors.slice(0, 3).join(', ')}
 											{#if result.authors.length > 3}
@@ -948,7 +957,7 @@
 									class="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-cyan-400"
 								>
 									<ExternalLink class="w-4 h-4" aria-hidden="true" />
-									자세히 보기
+									{t('ui.view_detail')}
 								</button>
 							</article>
 						{/each}
@@ -963,19 +972,19 @@
 						<Search class="w-12 h-12 text-orange-400" aria-hidden="true" />
 					</div>
 					
-					<h2 class="text-2xl font-semibold text-white mb-4">
-						검색 결과가 없습니다
-					</h2>
+									<h2 class="text-2xl font-semibold text-white mb-4">
+					{t('results.no_results.title')}
+				</h2>
 					
 					<div class="max-w-md mx-auto mb-6">
 						<p class="text-white/80 mb-4">
-							"{searchQuery}"에 대한 검색 결과를 찾을 수 없습니다.
+							{t('results.no_results.message', { query: searchQuery })}
 						</p>
 						
 						<!-- 현재 검색 범위 표시 -->
 						<div class="flex items-center justify-center gap-2 text-sm text-white/70 mb-4">
 							<MapPin class="w-4 h-4 text-green-400" />
-							<span>검색 범위: </span>
+							<span>{t('results.search_scope')}: </span>
 							{#if selectedSpecificInstance && selectedInstanceInfo}
 								<span class="text-cyan-400 font-medium">
 									{selectedInstanceInfo.platformName} ({selectedInstanceInfo.country})
@@ -983,7 +992,7 @@
 							{:else}
 								<span class="text-green-400 font-medium">{selectedCountry}</span>
 								<span class="text-white/50">
-									({filteredInstances.length}개 인스턴스)
+									({t('results.instances_count', { count: filteredInstances.length })})
 								</span>
 							{/if}
 						</div>
@@ -991,19 +1000,19 @@
 					
 					<!-- 검색 제안 -->
 					<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
-						<h3 class="text-lg font-medium text-blue-400 mb-3">💡 검색 팁</h3>
+						<h3 class="text-lg font-medium text-blue-400 mb-3">💡 {t('results.no_results.tips.title')}</h3>
 						<ul class="text-white/80 text-sm space-y-2 text-left">
-							<li>• 다른 키워드나 유사한 용어를 사용해보세요</li>
-							<li>• 검색어를 단순화하거나 더 구체적으로 해보세요</li>
-							<li>• 영어 키워드를 시도해보세요 (예: "COVID-19", "climate change")</li>
-							<li>• 다른 국가나 인스턴스에서 검색해보세요</li>
-							<li>• 고급 검색 옵션에서 검색 필드를 변경해보세요</li>
+							<li>• {t('results.no_results.tips.keywords')}</li>
+							<li>• {t('results.no_results.tips.simplify')}</li>
+							<li>• {t('results.no_results.tips.english')}</li>
+							<li>• {t('results.no_results.tips.other_instances')}</li>
+							<li>• {t('results.no_results.tips.advanced')}</li>
 						</ul>
 					</div>
 					
 					<!-- 다른 인스턴스에서 검색 버튼 -->
 					<div class="mb-6">
-						<h4 class="text-white/90 font-medium mb-3">다른 Dataverse 인스턴스에서 검색해보세요:</h4>
+						<h4 class="text-white/90 font-medium mb-3">{t('results.no_results.try_other_instances')}:</h4>
 						<div class="flex flex-wrap gap-2 justify-center">
 							{#each allInstances.filter(instance => instance.url !== selectedSpecificInstance).slice(0, 6) as instance (instance.id)}
 								<button
@@ -1034,7 +1043,7 @@
 							class="px-6 py-3 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 rounded-lg transition-colors duration-200 flex items-center gap-2"
 						>
 							<Search class="w-4 h-4" />
-							새로운 검색
+							{t('results.no_results.actions.new_search')}
 						</button>
 						
 						<button
@@ -1047,7 +1056,7 @@
 							class="px-6 py-3 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors duration-200 flex items-center gap-2"
 						>
 							<Globe class="w-4 h-4" />
-							Harvard Dataverse에서 검색
+							{t('results.no_results.actions.harvard_search')}
 						</button>
 					</div>
 				</div>
@@ -1056,7 +1065,7 @@
 
 		<!-- 지원 인스턴스 목록 -->
 		<section class="max-w-6xl mx-auto mb-12">
-			<h2 class="text-3xl font-bold text-white text-center mb-8">지원하는 Dataverse 인스턴스</h2>
+			<h2 class="text-3xl font-bold text-white text-center mb-8">{t('instances.title')}</h2>
 			
 			<div class="glass-card p-6">
 				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1065,7 +1074,7 @@
 						<div class="bg-white/5 rounded-lg p-4">
 							<h3 class="font-semibold text-white mb-2 flex items-center gap-2">
 								<MapPin class="w-4 h-4 text-blue-400" />
-								{country} ({countryInstances.length}개)
+								{t('ui.country_count', { country, count: countryInstances.length })}
 							</h3>
 							<ul class="space-y-1">
 								{#each countryInstances as instance (instance.id)}
@@ -1082,16 +1091,16 @@
 
 		<!-- 주요 기능 소개 -->
 		<section class="max-w-6xl mx-auto mb-12">
-			<h2 class="text-3xl font-bold text-white text-center mb-12">주요 기능</h2>
+			<h2 class="text-3xl font-bold text-white text-center mb-12">{t('features.title')}</h2>
 			
 			<div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 				<div class="glass-card p-6 text-center hover:scale-105 transition-transform duration-300">
 					<div class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-						<Search class="w-8 h-8 text-cyan-400" aria-hidden="true" />
+						<Settings class="w-8 h-8 text-cyan-400" aria-hidden="true" />
 					</div>
-					<h3 class="text-xl font-semibold text-white mb-3">AI 기반 검색</h3>
+					<h3 class="text-xl font-semibold text-white mb-3">{t('features.mcp_compatible.title')}</h3>
 					<p class="text-white/80 text-sm">
-						자연어로 검색하고 AI가 관련된 연구 데이터를 정확하게 찾아드립니다.
+						{t('features.mcp_compatible.description')}
 					</p>
 				</div>
 
@@ -1099,19 +1108,19 @@
 					<div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
 						<Globe class="w-8 h-8 text-blue-400" aria-hidden="true" />
 					</div>
-					<h3 class="text-xl font-semibold text-white mb-3">통합 검색</h3>
+					<h3 class="text-xl font-semibold text-white mb-3">{t('features.unified_search.title')}</h3>
 					<p class="text-white/80 text-sm">
-						전 세계 {stats.active}개 Dataverse 인스턴스를 하나의 인터페이스로 통합 검색합니다.
+						{t('features.unified_search.description', { active: stats.active })}
 					</p>
 				</div>
 
 				<div class="glass-card p-6 text-center hover:scale-105 transition-transform duration-300">
 					<div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-						<Settings class="w-8 h-8 text-purple-400" aria-hidden="true" />
+						<Database class="w-8 h-8 text-purple-400" aria-hidden="true" />
 					</div>
-					<h3 class="text-xl font-semibold text-white mb-3">MCP 호환</h3>
+					<h3 class="text-xl font-semibold text-white mb-3">{t('features.global_access.title')}</h3>
 					<p class="text-white/80 text-sm">
-						Claude, ChatGPT 등 다양한 AI 도구에서 바로 사용 가능합니다.
+						{t('features.global_access.description')}
 					</p>
 				</div>
 			</div>
@@ -1119,7 +1128,7 @@
 
 		<!-- 빠른 시작 가이드 -->
 		<section class="max-w-6xl mx-auto">
-			<h2 class="text-3xl font-bold text-white text-center mb-12">빠른 시작 가이드</h2>
+			<h2 class="text-3xl font-bold text-white text-center mb-12">{t('quickstart.title')}</h2>
 
 			<div class="glass-card p-8">
 				
@@ -1129,7 +1138,7 @@
 						<div>
 							<h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
 								<Code class="w-5 h-5 text-green-400" aria-hidden="true" />
-								1. MCP 서버 설정
+								{t('quickstart.mcp_setup.title')}
 							</h3>
 							<div class="bg-black/30 rounded-lg p-4 text-sm text-gray-300 font-mono">
 								<pre><code>{JSON.stringify({
@@ -1146,22 +1155,22 @@
 						<div>
 							<h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
 								<BookOpen class="w-5 h-5 text-blue-400" aria-hidden="true" />
-								2. AI 도구에서 사용
+								{t('quickstart.ai_usage.title')}
 							</h3>
 							<div class="space-y-3">
 								<div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
 									<p class="text-white/90 text-sm italic">
-										"COVID-19 관련 연구 데이터를 찾아서 분석해줘"
+										"{t('quickstart.examples.0')}"
 									</p>
 								</div>
 								<div class="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
 									<p class="text-white/90 text-sm italic">
-										"기후변화 데이터에서 최신 트렌드를 알려줘"
+										"{t('quickstart.examples.1')}"
 									</p>
 								</div>
 								<div class="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
 									<p class="text-white/90 text-sm italic">
-										"경제 데이터셋을 찾아서 요약해줘"
+										"{t('quickstart.examples.2')}"
 									</p>
 								</div>
 							</div>

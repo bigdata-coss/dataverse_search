@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getInstancesByCountry, getActiveInstances, type DataverseInstance } from '$lib/data/dataverse-instances.js';
+	import { t } from '$lib/stores/language.js';
 	
 	interface Props {
 		selectedCountry: string;
@@ -50,7 +51,7 @@
 	<!-- 국가 선택 -->
 	<div>
 		<label for="country-select" class="block text-white/80 text-sm mb-2">
-			검색 국가 선택
+			{t('search.country_label')}
 		</label>
 		<select
 			id="country-select"
@@ -68,7 +69,7 @@
 	<!-- 특정 인스턴스 선택 -->
 	<div>
 		<label for="instance-select" class="block text-white/80 text-sm mb-2">
-			특정 인스턴스 선택
+			{t('search.instance_label')}
 		</label>
 		<select
 			id="instance-select"

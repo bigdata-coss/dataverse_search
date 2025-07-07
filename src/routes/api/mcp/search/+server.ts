@@ -168,6 +168,20 @@ async function searchSingleInstance(
 	} catch (err) {
 		debugError(`단일 인스턴스 검색 오류 - ${instanceUrl}:`, err);
 		debugLog(`=== 단일 인스턴스 검색 실패 ===`);
+		
+		// 오류 유형별 로깅
+		if (err instanceof Error) {
+			if (err.message.includes('XML') || err.message.includes('HTML')) {
+				debugError(`${instanceUrl}: 비JSON 응답 (XML/HTML) - 지원되지 않는 Dataverse 버전이거나 서버 설정 문제`);
+			} else if (err.message.includes('JSON')) {
+				debugError(`${instanceUrl}: JSON 파싱 오류 - 응답 형식 문제`);
+			} else if (err.message.includes('HTTP')) {
+				debugError(`${instanceUrl}: HTTP 오류 - 서버 접근 불가`);
+			} else {
+				debugError(`${instanceUrl}: 알 수 없는 오류 - ${err.message}`);
+			}
+		}
+		
 		return { results: [], totalCount: 0 };
 	}
 }
