@@ -1,6 +1,7 @@
 /**
  * Dataverse 검색 API 엔드포인트
  * 실제 Dataverse Search API를 호출하여 결과 반환
+ * SSE(Server-Sent Events) 지원으로 실시간 검색 진행상황 제공
  */
 
 import { json, error } from '@sveltejs/kit';
@@ -40,6 +41,12 @@ interface SearchResult {
 	publishedAt?: string;
 	persistentId?: string;
 	subjects?: string[];
+}
+
+interface SSEEvent {
+	event: string;
+	data: any;
+	timestamp: number;
 }
 
 function debugLog(message: string, data?: any) {
@@ -252,6 +259,175 @@ function calculateRelevanceScore(result: SearchResult, query: string): number {
 }
 
 /**
+ * SSE 이벤트 생성 헬퍼 함수
+ */
+function createSSEEvent(event: string, data: any): string {
+	const sseData: SSEEvent = {
+		event,
+		data,
+		timestamp: Date.now()
+	};
+	
+	return `event: ${event}\ndata: ${JSON.stringify(sseData.data)}\nid: ${sseData.timestamp}\n\n`;
+}
+
+/**
+ * SSE를 통한 실시간 검색 수행
+ */
+async function performSSESearch(
+	query: string,
+	options: {
+		country?: string;
+		specific_instance?: any;
+		per_page?: number;
+		start?: number;
+		type?: string;
+	},
+	sendEvent: (event: string, data: any) => void
+): Promise<{results: SearchResult[], totalCount: number}> {
+	try {
+		sendEvent('search_start', {
+			query,
+			timestamp: new Date().toISOString(),
+			options
+		});
+
+		let searchResponse: {results: SearchResult[], totalCount: number} = { results: [], totalCount: 0 };
+		
+		if (options.specific_instance) {
+			// 특정 인스턴스 검색
+			sendEvent('instance_search_start', {
+				instance: options.specific_instance.platformName,
+				url: options.specific_instance.url
+			});
+			
+			searchResponse = await searchSingleInstance(
+				options.specific_instance.url,
+				query,
+				{ per_page: options.per_page, start: options.start, type: options.type as any }
+			);
+			
+			sendEvent('instance_search_complete', {
+				instance: options.specific_instance.platformName,
+				results_count: searchResponse.results.length,
+				total_count: searchResponse.totalCount
+			});
+			
+		} else if (options.country && options.country !== 'all') {
+			// 국가별 검색
+			const countryInstances = getInstancesByCountry(options.country);
+			
+			sendEvent('country_search_start', {
+				country: options.country,
+				instances_count: countryInstances.length,
+				instances: countryInstances.map(i => i.platformName)
+			});
+			
+			const instanceUrls = countryInstances.map(inst => inst.url);
+			
+			// 각 인스턴스별로 검색 진행상황 스트리밍
+			const results: SearchResult[] = [];
+			let totalCount = 0;
+			
+			for (let i = 0; i < instanceUrls.length; i++) {
+				const instanceUrl = instanceUrls[i];
+				const instance = countryInstances[i];
+				
+				sendEvent('instance_search_start', {
+					instance: instance.platformName,
+					url: instance.url,
+					progress: Math.round(((i + 1) / instanceUrls.length) * 100)
+				});
+				
+				try {
+					const instanceResult = await searchSingleInstance(
+						instanceUrl,
+						query,
+						{ per_page: Math.ceil((options.per_page || 10) / instanceUrls.length), start: options.start, type: options.type as any }
+					);
+					
+					results.push(...instanceResult.results);
+					totalCount += instanceResult.totalCount;
+					
+					sendEvent('instance_search_complete', {
+						instance: instance.platformName,
+						results_count: instanceResult.results.length,
+						total_count: instanceResult.totalCount,
+						progress: Math.round(((i + 1) / instanceUrls.length) * 100)
+					});
+					
+				} catch (error) {
+					sendEvent('instance_search_error', {
+						instance: instance.platformName,
+						error: error instanceof Error ? error.message : 'Unknown error',
+						progress: Math.round(((i + 1) / instanceUrls.length) * 100)
+					});
+				}
+			}
+			
+			searchResponse = { results, totalCount };
+			
+		} else {
+			// 전역 검색
+			const priorityInstances = [
+				'https://dataverse.harvard.edu',
+				'https://dataverse.nl/',
+				'https://dataverse.no/',
+				'https://demo.dataverse.org/'
+			];
+			
+			const allInstances = getActiveInstances();
+			const instanceUrls = priorityInstances.filter(url => 
+				allInstances.some(inst => inst.url === url)
+			);
+			
+			sendEvent('global_search_start', {
+				total_instances: instanceUrls.length,
+				priority_instances: instanceUrls
+			});
+			
+			searchResponse = await searchMultipleInstances(instanceUrls, query, { 
+				per_page: Math.ceil((options.per_page || 10) / instanceUrls.length), 
+				start: options.start,
+				type: options.type as any,
+				maxConcurrent: 4 
+			});
+		}
+		
+		// 중복 제거
+		const uniqueResults = searchResponse.results.filter((result: SearchResult, index: number, self: SearchResult[]) => 
+			index === self.findIndex((r: SearchResult) => r.persistentId === result.persistentId)
+		);
+		
+		sendEvent('search_processing', {
+			original_count: searchResponse.results.length,
+			unique_count: uniqueResults.length,
+			total_count: searchResponse.totalCount
+		});
+		
+		const limitedResults = uniqueResults.slice(0, options.per_page || 10);
+		
+		sendEvent('search_complete', {
+			final_count: limitedResults.length,
+			total_count: searchResponse.totalCount,
+			query,
+			timestamp: new Date().toISOString()
+		});
+		
+		return { results: limitedResults, totalCount: searchResponse.totalCount };
+		
+	} catch (error) {
+		sendEvent('search_error', {
+			error: error instanceof Error ? error.message : 'Unknown error',
+			query,
+			timestamp: new Date().toISOString()
+		});
+		
+		throw error;
+	}
+}
+
+/**
  * POST 요청 핸들러 - 검색 수행
  */
 export const POST: RequestHandler = async ({ request }) => {
@@ -430,6 +606,157 @@ export const POST: RequestHandler = async ({ request }) => {
 			debug: dev ? { error: err } : undefined
 		}, { status: 500 });
 	}
+};
+
+/**
+ * PUT 요청 핸들러 - SSE 실시간 검색
+ */
+export const PUT: RequestHandler = async ({ request }) => {
+	try {
+		debugLog(`===== SSE 검색 요청 시작 =====`);
+		
+		const body: SearchRequest = await request.json();
+		debugLog(`SSE 요청 바디:`, body);
+		
+		// 요청 검증
+		if (!body.query || body.query.trim().length === 0) {
+			debugError(`SSE 검색어 누락`);
+			return error(400, '검색어를 입력해주세요.');
+		}
+		
+		const query = body.query.trim();
+		const perPage = Math.min(body.per_page || 10, 50);
+		const start = body.start || 0;
+		const type = body.type || 'dataset';
+		
+		debugLog(`SSE 처리된 파라미터:`, {
+			query,
+			perPage,
+			start,
+			type,
+			country: body.country,
+			specific_instance: body.specific_instance?.platformName
+		});
+		
+		// SSE 응답 스트림 생성
+		const encoder = new TextEncoder();
+		let isConnectionClosed = false;
+		
+		const stream = new ReadableStream({
+			start(controller) {
+				debugLog('SSE 스트림 시작');
+				
+				// 연결 확인 헬퍼 함수
+				const sendEvent = (event: string, data: any) => {
+					if (isConnectionClosed) {
+						debugLog(`SSE 연결이 닫혀서 이벤트 전송 중단: ${event}`);
+						return;
+					}
+					
+					try {
+						const sseData = createSSEEvent(event, data);
+						debugLog(`SSE 이벤트 전송: ${event}`, data);
+						controller.enqueue(encoder.encode(sseData));
+					} catch (err) {
+						debugError(`SSE 이벤트 전송 실패: ${event}`, err);
+						isConnectionClosed = true;
+					}
+				};
+				
+				// 연결 시작 이벤트
+				sendEvent('connected', {
+					message: 'SSE 연결이 설정되었습니다',
+					timestamp: new Date().toISOString()
+				});
+				
+				// 실시간 검색 수행
+				performSSESearch(query, {
+					country: body.country,
+					specific_instance: body.specific_instance,
+					per_page: perPage,
+					start,
+					type
+				}, sendEvent)
+				.then((result) => {
+					if (!isConnectionClosed) {
+						// 최종 결과 전송
+						sendEvent('final_results', {
+							success: true,
+							query,
+							total: result.totalCount,
+							results: result.results,
+							searchStrategy: body.specific_instance ? 'specific_instance' : 
+							              body.country ? 'country' : 'global',
+							timestamp: new Date().toISOString()
+						});
+						
+						// 연결 종료
+						sendEvent('end', {
+							message: '검색이 완료되었습니다',
+							timestamp: new Date().toISOString()
+						});
+						
+						debugLog('SSE 검색 완료 및 스트림 종료');
+						controller.close();
+					}
+				})
+				.catch((err) => {
+					if (!isConnectionClosed) {
+						debugError('SSE 검색 오류:', err);
+						sendEvent('error', {
+							error: err instanceof Error ? err.message : 'Unknown error',
+							timestamp: new Date().toISOString()
+						});
+						
+						controller.close();
+					}
+				});
+			},
+			
+			cancel() {
+				debugLog('SSE 클라이언트 연결 해제');
+				isConnectionClosed = true;
+			}
+		});
+		
+		debugLog('SSE 응답 헤더 설정 및 스트림 반환');
+		
+		return new Response(stream, {
+			headers: {
+				'Content-Type': 'text/event-stream',
+				'Cache-Control': 'no-cache',
+				'Connection': 'keep-alive',
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Headers': 'Content-Type',
+				'Access-Control-Allow-Methods': 'PUT, OPTIONS'
+			}
+		});
+		
+	} catch (err) {
+		debugError('SSE 검색 최상위 오류:', err);
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		
+		return json({
+			success: false,
+			message: `SSE 검색 중 오류가 발생했습니다: ${errorMessage}`,
+			error: dev ? err : undefined
+		}, { status: 500 });
+	}
+};
+
+/**
+ * OPTIONS 요청 핸들러 - CORS 지원
+ */
+export const OPTIONS: RequestHandler = async () => {
+	return new Response(null, {
+		status: 200,
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+			'Access-Control-Max-Age': '86400'
+		}
+	});
 };
 
 /**

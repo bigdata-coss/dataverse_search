@@ -1105,7 +1105,7 @@
 									"mcpServers": {
 										"dataverse-mcp": {
 											"command": "npx",
-											"args": ["mcp-remote@next", "https://your-domain.vercel.app/api/mcp"]
+											"args": ["mcp-remote@next", "https://dataverse.elpai.org/api/mcp"]
 										}
 									}
 								}, null, 2)}</code></pre>
