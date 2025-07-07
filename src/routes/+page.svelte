@@ -311,10 +311,19 @@
 		searchResults = null;
 		totalResults = 0;
 		
+		// 🔥 검색하는 인스턴스에 맞게 상태값들 업데이트
+		selectedCountry = instance.country;
+		selectedSpecificInstance = instance.url;
+		
+		// 결과내 검색 상태 초기화
+		resultFilterQuery = '';
+		filteredResults = [];
+		
 		if (dev) {
 			console.log(`🔍 [${instance.country}] ${instance.platformName}에서 검색 시작`);
 			console.log('인스턴스 URL:', instance.url);
 			console.log('인스턴스 API URL:', instance.apiUrl);
+			console.log('상태값 업데이트:', { selectedCountry: instance.country, selectedSpecificInstance: instance.url });
 		}
 		
 		try {
@@ -416,8 +425,6 @@
 					searchTime: data.searchTime
 				};
 				
-				// selectedInstance는 변경하지 않음 (일반 검색에 영향을 주지 않기 위해)
-				
 				if (dev) {
 					console.log(`✅ ${instance.platformName} 검색 성공: ${results.length}개 결과 (총 ${totalResults}개)`);
 					console.log(`📊 특정 인스턴스 페이지네이션 정보:`, {
@@ -429,7 +436,31 @@
 					});
 				}
 			} else {
-				throw new Error(data.message || '검색 결과를 가져올 수 없습니다.');
+				// 🔥 검색 결과가 없어도 상태는 업데이트된 상태로 유지 (빈 결과로 설정)
+				searchResults = {
+					items: [],
+					total_count: 0,
+					metadata: {
+						search_strategy: 'specific_instance',
+						search_time: data.searchTime,
+						applied_filters: [`Instance: ${instance.platformName}`]
+					},
+					suggestions: data.suggestions
+				};
+				
+				totalResults = 0;
+				
+				// 검색 메타데이터 업데이트
+				searchMeta = {
+					searchStrategy: 'specific_instance',
+					appliedFilters: [`Instance: ${instance.platformName}`],
+					suggestions: data.suggestions,
+					searchTime: data.searchTime
+				};
+				
+				if (dev) {
+					console.log(`ℹ️ ${instance.platformName} 검색 결과 없음`);
+				}
 			}
 		} catch (error) {
 			if (dev) {
