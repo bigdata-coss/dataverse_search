@@ -14,32 +14,37 @@
 - 🌐 **다중 인스턴스 지원**: 전 세계 32개 Dataverse 인스턴스 통합 검색
 - 🤖 **MCP 호환**: Claude, ChatGPT 등 AI 도구에서 바로 사용
 - 📡 **SSE 지원**: Server-Sent Events로 실시간 검색 상태 업데이트
+- 🌍 **다국어 지원**: 한국어, 영어, 일본어, 중국어, 스페인어 지원
 - 💎 **Vision Pro UI**: 글래스모피즘 디자인과 현대적 인터페이스
 - ♿ **완전한 접근성**: WCAG 2.1 AA 준수
 - 📱 **모바일 반응형**: 모든 디바이스에서 최적화된 경험
 
 ## 🚀 빠른 시작
 
-### 1. 프로젝트 클론 및 설정
+### 1. 시스템 요구사항
+- **Node.js 20.0.0 이상** 필요
+- npm 또는 yarn 패키지 매니저
+
+### 2. 프로젝트 클론 및 설정
 
 ```bash
 git clone https://github.com/bigdata-coss/dataverse_search.git
 cd elpai_dataverse_MCP
 ```
 
-### 2. 의존성 설치
+### 3. 의존성 설치
 
 ```bash
 npm install
 ```
 
-### 3. 환경 변수 설정
+### 4. 환경 변수 설정
 
 ```bash
 cp env.example .env
 ```
 
-### 4. 개발 서버 실행
+### 5. 개발 서버 실행
 
 ```bash
 npm run dev
@@ -52,7 +57,8 @@ npm run dev
 - **Frontend**: SvelteKit v5 + TypeScript
 - **Styling**: Tailwind CSS v4 + 글래스모피즘
 - **Icons**: Lucide Svelte
-- **MCP SDK**: @modelcontextprotocol/sdk
+- **MCP SDK**: @modelcontextprotocol/sdk v1.13.2
+- **i18n**: 커스텀 다국어 지원 시스템
 - **Runtime**: Node.js 20.x
 - **Deployment**: Vercel
 - **Validation**: Zod
@@ -66,7 +72,7 @@ npm run dev
 ```json
 {
   "mcpServers": {
-    "dataverse-mcp": {
+    "global-dataverse-mcp": {
       "command": "npx",
       "args": [
         "mcp-remote@next",
@@ -82,7 +88,8 @@ npm run dev
 ```
 "COVID-19 관련 연구 데이터를 찾아서 분석해줘"
 "기후변화 데이터셋에서 최신 트렌드를 알려줘"
-"경제학 관련 데이터를 Harvard Dataverse에서 검색해줘"
+"미국에서 경제학 관련 데이터를 검색해줘"
+"전 세계 모든 Dataverse에서 machine learning 데이터를 찾아줘"
 ```
 
 ### 🧪 MCP SSE 테스트
@@ -102,10 +109,9 @@ curl -X POST https://dataverse.elpai.org/api/mcp \
     "id": 1,
     "method": "tools/call",
     "params": {
-      "name": "search-datasets",
+      "name": "search-global-dataverse",
       "arguments": {
         "query": "COVID-19",
-        "country": "USA",
         "per_page": 5
       }
     }
@@ -115,7 +121,7 @@ curl -X POST https://dataverse.elpai.org/api/mcp \
 #### 2. Claude Desktop 연결 테스트
 Claude Desktop에서 MCP 서버가 정상적으로 연결되었는지 확인:
 - Claude Desktop 하단에 "🔌 MCP" 아이콘 표시 확인
-- "dataverse-mcp" 서버가 연결 목록에 나타나는지 확인
+- "global-dataverse-mcp" 서버가 연결 목록에 나타나는지 확인
 - 검색 명령어 실행 후 응답 시간 측정
 
 #### 3. SSE 스트리밍 테스트
@@ -130,66 +136,126 @@ eventSource.onerror = function(event) {
 };
 ```
 
-### 지원하는 MCP 도구
+### 🔧 지원하는 MCP 도구
 
-| 도구 | 설명 | 파라미터 | SSE 지원 |
+| 도구 | 설명 | 파라미터 | 사용 예시 |
 |------|------|----------|----------|
-| `search-datasets` | 데이터셋 검색 | query, type, instance, sort, per_page | ✅ |
-| `get-dataset-info` | 데이터셋 상세 정보 | persistent_id, instance | ✅ |
-| `list-instances` | 활성 인스턴스 목록 | country (선택사항) | ✅ |
+| `search-datasets` | 특정 인스턴스에서 데이터셋 검색 | query, instance_url, type, per_page | Harvard Dataverse에서 "cancer" 검색 |
+| `search-global-dataverse` | 전 세계 모든 활성 인스턴스 동시 검색 | query, type, per_page | 전역에서 "climate change" 검색 |
+| `search-by-country` | 특정 국가의 인스턴스에서만 검색 | query, country, type, per_page | 독일에서 "AI" 관련 데이터 검색 |
+| `get-dataset-info` | 데이터셋 DOI/Handle로 상세 정보 조회 | persistent_id, instance_url | DOI로 데이터셋 메타데이터 조회 |
+| `list-dataverse-instances` | 사용 가능한 인스턴스 목록 조회 | country (선택사항) | 모든 활성 인스턴스 또는 국가별 목록 |
 
-### 지원하는 MCP 리소스
+### 📊 지원하는 MCP 리소스
 
-| 리소스 | 설명 | SSE 업데이트 |
-|--------|------|-------------|
+| 리소스 | 설명 | 실시간 업데이트 |
+|--------|------|----------------|
 | `dataverse://guide` | Dataverse 사용 가이드 | ❌ |
-| `dataverse://instances` | 인스턴스 목록 | ✅ |
-| `dataverse://stats` | 실시간 통계 | ✅ |
+| `dataverse://instances` | 인스턴스 목록과 상태 | ✅ |
+| `dataverse://stats` | 실시간 통계 및 성능 지표 | ✅ |
 
 ## 🌍 지원하는 Dataverse 인스턴스
 
-### 주요 인스턴스 (기본 검색)
-- **Harvard Dataverse** (기본): https://dataverse.harvard.edu
-- **Demo Dataverse**: https://demo.dataverse.org
-- **TU Delft Research Data**: https://data.4tu.nl
+### 📈 통계 요약
+- **총 인스턴스**: 32개
+- **활성 인스턴스**: 31개
+- **지원 국가**: 22개
+- **비활성 인스턴스**: 1개 (SNU Dataverse)
 
-### 지역별 인스턴스
-- **아시아**: 싱가포르(NTU), 중국(푸단대), 한국(SNU - 비활성)
-- **유럽**: 독일(괴팅겐), 네덜란드(DataverseNL), 덴마크(DeiC)
-- **아메리카**: 미국(다수), 브라질(FGV, Fiocruz), 아르헨티나(UNR)
+### 🌟 주요 인스턴스 (기본 검색)
+- **Harvard Dataverse** (미국): https://dataverse.harvard.edu
+- **TU Delft Research Data** (네덜란드): https://data.4tu.nl
+- **DataverseNL** (네덜란드): http://dataverse.nl
+- **Göttingen Research Online** (독일): https://data.goettingen-research-online.de
 
-*총 32개 인스턴스 지원 (활성: 31개)*
+### 🌍 지역별 인스턴스 분포
+
+#### 🇺🇸 **아메리카 (9개)**
+- **미국 (6개)**: Harvard, Johns Hopkins, George Mason, Florida International, Yale, UNC
+- **브라질 (2개)**: FGV Dataverse, Arca Dados (Fiocruz)
+- **아르헨티나 (1개)**: UNR 학술 데이터 저장소
+
+#### 🇪🇺 **유럽 (12개)**
+- **독일 (3개)**: Göttingen, DaRUS Stuttgart, IIT
+- **네덜란드 (2개)**: DataverseNL, TU Delft
+- **스페인 (2개)**: CORA-CSUC, e-cienciaDatos
+- **덴마크, 노르웨이, 벨기에, 프랑스, 포르투갈** (각 1개)
+
+#### 🌏 **아시아-태평양 (4개)**
+- **중국**: 푸단대학교 (Fudan University)
+- **싱가포르**: NTU 데이터 저장소
+- **호주**: ADA Dataverse
+- **한국**: SNU Dataverse (현재 비활성)
+
+#### 🌍 **기타 지역 (7개)**
+- **우크라이나**: DataverseUA
+- **케냐**: World Agroforestry
+- **멕시코**: CIMMYT Research Data
+- **에콰도르**: CEDIA Indata
+- **우루과이**: ANII Redata
+
+## 🌐 다국어 지원
+
+### 지원 언어
+- 🇰🇷 **한국어 (ko)**: 기본 언어
+- 🇺🇸 **영어 (en)**: 국제 표준
+- 🇯🇵 **일본어 (ja)**: 일본 연구자 지원
+- 🇨🇳 **중국어 (zh)**: 중국 연구자 지원
+- 🇪🇸 **스페인어 (es)**: 스페인어권 연구자 지원
+
+### 언어 자동 감지
+- 브라우저 언어 설정 기반 자동 감지
+- 사용자 선호 언어 저장 (localStorage)
+- 언어 변경 시 실시간 UI 업데이트
 
 ## 📁 프로젝트 구조
 
 ```
 src/
 ├── routes/
-│   ├── +layout.svelte          # 루트 레이아웃
+│   ├── +layout.svelte          # 루트 레이아웃 (다국어 지원)
 │   ├── +page.svelte            # 메인 대시보드
 │   └── api/
 │       └── mcp/
-│           ├── +server.ts      # MCP 서버 엔드포인트
+│           ├── +server.ts      # MCP 서버 엔드포인트 (5개 툴)
 │           └── search/
 │               └── +server.ts  # 검색 API 엔드포인트
 ├── lib/
 │   ├── components/             # 재사용 가능한 컴포넌트
 │   │   ├── InstanceSelector.svelte
+│   │   ├── LanguageSelector.svelte  # 언어 선택기
 │   │   ├── SearchForm.svelte
 │   │   ├── ResultsFilter.svelte
 │   │   └── Pagination.svelte
+│   ├── i18n/                  # 다국어 지원 시스템
+│   │   ├── index.ts           # i18n 핵심 로직
+│   │   └── translations/      # 언어별 번역 파일
+│   │       ├── ko.js          # 한국어
+│   │       ├── en.js          # 영어
+│   │       ├── ja.js          # 일본어
+│   │       ├── zh.js          # 중국어
+│   │       └── es.js          # 스페인어
 │   ├── api/
-│   │   └── dataverse.ts        # Dataverse API 클라이언트
+│   │   └── dataverse.ts       # Dataverse API 클라이언트
 │   ├── data/
-│   │   └── dataverse-instances.ts # 인스턴스 메타데이터
+│   │   └── dataverse-instances.ts # 32개 인스턴스 메타데이터
 │   └── types/
-│       ├── dataverse.ts        # Dataverse 타입 정의
-│       └── mcp.ts              # MCP 타입 정의
-├── app.html                    # HTML 템플릿
-└── app.css                     # 전역 CSS (Vision Pro 스타일)
+│       ├── dataverse.ts       # Dataverse 타입 정의
+│       └── mcp.ts             # MCP 타입 정의
+├── app.html                   # HTML 템플릿
+└── app.css                    # 전역 CSS (Vision Pro 스타일)
 ```
 
 ## 🔧 개발 가이드
+
+### 시스템 요구사항
+```bash
+# Node.js 20.x 이상 필요
+node --version  # v20.0.0+
+
+# 패키지 매니저
+npm --version   # 9.x+
+```
 
 ### 코드 스타일
 
@@ -200,6 +266,7 @@ src/
 - ✅ **접근성 준수** (button 요소 사용, ARIA 속성, 키보드 네비게이션)
 - ✅ **Vision Pro 스타일** UI 디자인 (글래스모피즘)
 - ✅ **모바일 호환성** (터치 친화적, 반응형)
+- ✅ **다국어 지원** (i18n 함수 사용)
 
 ### 빌드 및 배포
 
@@ -225,52 +292,29 @@ VERCEL_URL=dataverse.elpai.org
 NODE_ENV=production
 ```
 
-## 🌟 주요 기능
-
-### 1. AI 기반 검색
-- 자연어 쿼리 지원
-- 다국어 검색 (한국어, 영어)
-- 스마트 필터링 및 정렬
-- 결과내 재검색 (클라이언트/서버 사이드)
-
-### 2. Vision Pro 스타일 UI
-- 글래스모피즘 디자인
-- 부드러운 애니메이션
-- 다크 모드 최적화
-- 고급 검색 옵션 토글
-
-### 3. 완전한 접근성
-- 키보드 네비게이션
-- 스크린리더 지원 (ARIA 라벨링)
-- 포커스 관리
-- 시각적 피드백
-
-### 4. 모바일 반응형
-- 터치 친화적 인터페이스
-- 적응형 레이아웃
-- 성능 최적화
-- 오프라인 지원 (준비 중)
-
-### 5. 실시간 업데이트
-- Server-Sent Events (SSE)
-- 검색 진행 상태 표시
-- 실시간 인스턴스 상태 모니터링
-- 자동 재연결
-
 ## 🔍 API 엔드포인트
 
 ### GET /api/mcp
-MCP 서버 상태 확인
+MCP 서버 상태 및 기본 정보 조회
 
 ```json
 {
-  "name": "dataverse-mcp",
-  "version": "1.0.0",
+  "name": "global-dataverse-mcp",
+  "version": "2.0.0",
+  "description": "AI-powered global Dataverse search and analysis platform",
   "status": "active",
-  "runtime": "nodejs20.x",
-  "capabilities": ["tools", "resources", "sse"],
-  "tools": ["search-datasets", "get-dataset-info", "list-instances"],
-  "resources": ["dataverse://guide", "dataverse://instances", "dataverse://stats"]
+  "instances": {
+    "total": 32,
+    "active": 31,
+    "countries": 22
+  },
+  "capabilities": [
+    "search-datasets",
+    "search-global-dataverse", 
+    "search-by-country",
+    "get-dataset-info",
+    "list-dataverse-instances"
+  ]
 }
 ```
 
@@ -283,53 +327,27 @@ MCP 요청 처리 (JSON-RPC 2.0 프로토콜)
   "id": 1,
   "method": "tools/call",
   "params": {
-    "name": "search-datasets",
+    "name": "search-global-dataverse",
     "arguments": {
       "query": "machine learning",
-      "country": "USA",
       "per_page": 10,
-      "sort": "date",
-      "order": "desc"
+      "type": "dataset"
     }
   }
 }
 ```
 
 ### POST /api/mcp/search
-직접 검색 API
+직접 검색 API (내부 사용)
 
 ```json
 {
   "query": "climate change",
-  "country": "Netherlands",
+  "country": "Germany",
   "per_page": 20,
   "start": 0,
   "sort": "relevance"
 }
-```
-
-## 🚨 문제 해결
-
-### Vercel 배포 오류
-```bash
-# Node.js 런타임 오류 해결
-Error: invalid runtime nodejs18.x
-→ svelte.config.js에서 runtime: 'nodejs20.x'로 변경
-```
-
-### MCP 연결 문제
-```bash
-# Claude Desktop 연결 확인
-1. MCP 서버 URL이 올바른지 확인
-2. 네트워크 연결 상태 확인
-3. Claude Desktop 재시작
-4. MCP 로그 확인: ~/.config/claude-desktop/logs/
-```
-
-### SSE 연결 문제
-```bash
-# 브라우저에서 SSE 테스트
-curl -N -H "Accept: text/event-stream" https://dataverse.elpai.org/api/mcp/stream
 ```
 
 ## 🤝 기여하기
@@ -353,6 +371,11 @@ npm run dev
 
 # 타입 체크
 npm run check
+
+# 다국어 번역 추가 (새 언어 추가 시)
+# 1. src/lib/i18n/translations/에 새 언어 파일 추가
+# 2. src/lib/i18n/index.ts에 언어 코드 추가
+# 3. supportedLanguages 배열에 추가
 ```
 
 ## 📝 라이센스
@@ -361,17 +384,18 @@ npm run check
 
 ## 🙏 감사의 말
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP 표준
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP 표준 프로토콜
 - [Dataverse Project](https://dataverse.org/) - 오픈 소스 연구 데이터 저장소
-- [SvelteKit](https://kit.svelte.dev/) - 웹 애플리케이션 프레임워크
+- [SvelteKit](https://kit.svelte.dev/) - 차세대 웹 애플리케이션 프레임워크
 - [Tailwind CSS](https://tailwindcss.com/) - 유틸리티 우선 CSS 프레임워크
-- [Vercel](https://vercel.com/) - 배포 플랫폼
+- [Vercel](https://vercel.com/) - 현대적 배포 플랫폼
 
 ---
 
 **Made with ❤️ by ELPAI Team**
 
 전 세계 연구 데이터를 AI의 힘으로 더 쉽게 접근할 수 있도록 만들었습니다. 
+32개 인스턴스, 22개 국가, 5개 언어로 연구의 경계를 허물고 있습니다.
 
 ### 🌐 배포된 사이트
 - **메인 사이트**: https://dataverse.elpai.org
