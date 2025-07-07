@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Globe, ChevronDown, Check } from 'lucide-svelte';
-	import { currentLanguage, supportedLanguages, changeLanguage, type SupportedLanguage } from '$lib/stores/language.js';
+	import { currentLanguage, supportedLanguages, changeLanguage, type SupportedLanguage } from '$lib/i18n/index.js';
 
 	// 언어 표시명 매핑
 	const languageNames: Record<SupportedLanguage, string> = {
@@ -21,8 +21,8 @@
 		isOpen = false;
 	}
 
-	async function selectLanguage(lang: SupportedLanguage): Promise<void> {
-		await changeLanguage(lang);
+	function selectLanguage(lang: SupportedLanguage): void {
+		changeLanguage(lang);
 		closeDropdown();
 	}
 
@@ -78,9 +78,5 @@
 <style>
 	/* 모바일에서 드롭다운 위치 조정 */
 	@media (max-width: 640px) {
-		.language-selector :global(.absolute) {
-			right: 0;
-			left: auto;
-		}
 	}
 </style> 

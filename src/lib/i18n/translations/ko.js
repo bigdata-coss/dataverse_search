@@ -1,4 +1,4 @@
-{
+export default {
   "title": "Dataverse MCP 서버",
   "description": "MCP 클라이언트를 위한 글로벌 Dataverse 검색 플랫폼",
   "header": {
@@ -178,4 +178,4 @@
     "instance_search_error": "{instance} 검색 중 오류가 발생했습니다: {message}",
     "no_results_fetch": "검색 결과를 가져올 수 없습니다"
   }
-} 
+}; 

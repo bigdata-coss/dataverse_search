@@ -12,7 +12,7 @@
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 	
 	// 다국어 지원
-	import { currentLanguage, translations, t } from '$lib/stores/language.js';
+	import { t, translations, currentLanguage } from '$lib/i18n/index.js';
 
 	// 검색 결과 타입 정의
 	interface SearchResultItem {
@@ -234,7 +234,7 @@
 					url: item.url || '#',
 					type: item.type || 'dataset',
 					authors: item.authors || [],
-					instance: item.instance || t('ui.unknown'),
+					instance: item.instance || $translations.ui.unknown,
 					instanceUrl: item.instanceUrl,
 					publishedAt: item.published_at,
 					subjects: item.subjects || []
@@ -272,7 +272,7 @@
 					});
 				}
 			} else {
-				throw new Error(data.message || t('errors.no_results_fetch'));
+				throw new Error(data.message || $translations.errors.no_results_fetch);
 			}
 		} catch (error) {
 			if (dev) {
@@ -280,7 +280,7 @@
 			}
 			console.error('검색 오류:', error);
 			if (error instanceof Error) {
-				alert(t('errors.search_error', { message: error.message }));
+				alert($translations.errors.search_error + `: ${error.message}`);
 			}
 		} finally {
 			isLoading = false;
@@ -385,7 +385,7 @@
 		});
 		
 		if (!response.ok) {
-			throw new Error(t('errors.api_error', { status: response.status, message: response.statusText }));
+			throw new Error($translations.errors.api_error + `: ${response.status} ${response.statusText}`);
 		}
 			
 			const data = await response.json();
@@ -599,9 +599,11 @@
 </script>
 
 <svelte:head>
-	<title>{t('title')}</title>
-	<meta name="description" content={t('description')} />
+	<title>{$translations?.title || 'Dataverse MCP 서버'}</title>
+	<meta name="description" content={$translations?.description || 'Dataverse MCP 서버'} />
 </svelte:head>
+
+{#key $currentLanguage}
 
 <!-- 메인 컨테이너 -->
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
@@ -614,17 +616,17 @@
 			</div>
 			
 					<h1 class="text-5xl font-bold text-white mb-4 gradient-text">
-			{t('header.title')}
+			{$translations?.header?.title || 'Dataverse MCP 서버'}
 		</h1>
 		<p class="text-xl text-white/80 max-w-2xl mx-auto mb-8">
-			{t('header.subtitle', { active: stats.active })}
+			{$translations?.header?.subtitle?.replace('{active}', stats.active) || ''}
 		</p>
 			
 			<!-- 실시간 상태 표시 -->
 			<div class="flex items-center justify-center gap-6 flex-wrap">
 							<div class="glass-card px-4 py-2 flex items-center gap-2">
 				<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-				<span class="text-white/90 text-sm">{t('header.status.mcp_active')}</span>
+				<span class="text-white/90 text-sm">{$translations?.header?.status?.mcp_active || 'MCP 활성화'}</span>
 			</div>
 				<div class="glass-card px-4 py-2 flex items-center gap-2">
 					<Database class="w-4 h-4 text-cyan-400" />
@@ -1181,3 +1183,4 @@
 		</section>
 	</div>
 </div>
+{/key}

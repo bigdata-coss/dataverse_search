@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getInstancesByCountry, getActiveInstances, type DataverseInstance } from '$lib/data/dataverse-instances.js';
-	import { t } from '$lib/stores/language.js';
+	import { t } from '$lib/i18n/index.js';
 	
 	interface Props {
 		selectedCountry: string;

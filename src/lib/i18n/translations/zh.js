@@ -1,4 +1,4 @@
-{
+export default {
   "title": "Dataverse MCP 服务器",
   "description": "面向MCP客户端的全球Dataverse搜索平台",
   "header": {
@@ -86,7 +86,7 @@
     "page_jump_button": "跳转",
     "page_size_label": "页面大小:",
     "first": "首页",
-    "previous": "上一页", 
+    "previous": "上一页",
     "next": "下一页",
     "last": "末页"
   },
@@ -178,4 +178,4 @@
     "instance_search_error": "搜索{instance}时出错: {message}",
     "no_results_fetch": "无法获取搜索结果"
   }
-} 
+}; 

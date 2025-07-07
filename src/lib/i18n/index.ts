@@ -1,9 +1,25 @@
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 
+// 번역 데이터 직접 임포트
+import koTranslations from './translations/ko.js';
+import enTranslations from './translations/en.js';
+import jaTranslations from './translations/ja.js';
+import zhTranslations from './translations/zh.js';
+import esTranslations from './translations/es.js';
+
 // 지원하는 언어 목록
 export const supportedLanguages = ['ko', 'en', 'ja', 'zh', 'es'] as const;
 export type SupportedLanguage = (typeof supportedLanguages)[number];
+
+// 모든 번역 데이터
+const allTranslations = {
+	ko: koTranslations,
+	en: enTranslations,
+	ja: jaTranslations,
+	zh: zhTranslations,
+	es: esTranslations
+};
 
 // 브라우저 언어 감지 함수
 function detectBrowserLanguage(): SupportedLanguage {
@@ -39,54 +55,44 @@ function getInitialLanguage(): SupportedLanguage {
 	return detectBrowserLanguage();
 }
 
+// 초기 언어 설정
+const initialLanguage = getInitialLanguage();
+
 // 현재 언어 store
-export const currentLanguage = writable<SupportedLanguage>(getInitialLanguage());
+export const currentLanguage = writable<SupportedLanguage>(initialLanguage);
 
-// 번역 데이터 store - 기본값으로 빈 객체 대신 최소한의 폴백 제공
-export const translations = writable<any>({});
+// 번역 데이터 store - 초기값으로 현재 언어의 번역 데이터 설정
+export const translations = writable<any>(allTranslations[initialLanguage]);
 
-// 번역 파일 로드 함수
-export async function loadTranslations(lang: SupportedLanguage): Promise<any> {
-	try {
-		const response = await fetch(`/locales/${lang}.json`);
-		if (!response.ok) {
-			throw new Error(`Failed to load ${lang} translations`);
-		}
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error(`Error loading ${lang} translations:`, error);
-		// 폴백으로 한국어 로드 시도
-		if (lang !== 'ko') {
-			return loadTranslations('ko');
-		}
-		return {};
-	}
-}
-
-// 언어 변경 함수
-export async function changeLanguage(lang: SupportedLanguage): Promise<void> {
+// 언어 변경 함수 - 언어와 번역 데이터를 동시에 업데이트
+export function changeLanguage(lang: SupportedLanguage): void {
 	if (!supportedLanguages.includes(lang)) {
 		console.warn(`Unsupported language: ${lang}`);
 		return;
 	}
 	
 	currentLanguage.set(lang);
+	translations.set(allTranslations[lang]);
+	
+	// 언어 변경 트리거 업데이트 - 모든 컴포넌트가 다시 렌더링되도록 함
+	languageChangeId.set(Date.now());
 	
 	if (browser) {
 		localStorage.setItem('dataverse-language', lang);
-	}
-	
-	try {
-		const translationData = await loadTranslations(lang);
-		translations.set(translationData);
-	} catch (error) {
-		console.error('Failed to change language:', error);
+		console.log(`Language changed to: ${lang}`); // 디버깅용
 	}
 }
 
-// 매개변수가 있는 번역 함수 - get() 사용으로 수정
+// 언어 변경 트리거 - 컴포넌트들이 다시 렌더링되도록 함
+export const languageChangeId = writable<number>(0);
+
+// 번역 함수 - reactive한 store를 사용하도록 수정
 export function t(key: string, params: Record<string, any> = {}): string {
+	// 브라우저 환경에서만 languageChangeId를 구독하여 강제 업데이트
+	if (browser) {
+		get(languageChangeId); // 이 값이 변경될 때마다 함수가 다시 실행됨
+	}
+	
 	// get()을 사용하여 현재 store 값 가져오기
 	const currentTranslations = get(translations);
 	
@@ -128,17 +134,11 @@ export function t(key: string, params: Record<string, any> = {}): string {
 	return result;
 }
 
+
+
 // 초기 번역 로드 (브라우저에서만) - 즉시 실행
 if (browser) {
 	const initialLang = getInitialLanguage();
 	currentLanguage.set(initialLang);
-	
-	// 즉시 번역 데이터 로드 시작
-	loadTranslations(initialLang).then(data => {
-		translations.set(data);
-	}).catch(error => {
-		console.error('Failed to load initial translations:', error);
-		// 에러 시에도 빈 객체 설정
-		translations.set({});
-	});
+	translations.set(allTranslations[initialLang]);
 } 

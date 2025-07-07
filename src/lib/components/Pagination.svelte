@@ -1,6 +1,6 @@
 <script lang="ts">
 	// 다국어 지원 추가
-	import { t } from '$lib/stores/language.js';
+	import { t } from '$lib/i18n/index.js';
 	
 	interface Props {
 		currentPage: number;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Search, Settings, ChevronDown, ChevronUp } from 'lucide-svelte';
-	import { t } from '$lib/stores/language.js';
+	import { t } from '$lib/i18n/index.js';
 	
 	interface Props {
 		searchQuery: string;

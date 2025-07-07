@@ -1,4 +1,4 @@
-{
+export default {
   "title": "Servidor MCP de Dataverse",
   "description": "Plataforma global de búsqueda Dataverse para clientes MCP",
   "header": {
@@ -159,7 +159,7 @@
     "page_jump_button": "Ir",
     "page_size_label": "Tamaño de página:",
     "first": "Primera",
-    "previous": "Anterior", 
+    "previous": "Anterior",
     "next": "Siguiente",
     "last": "Última"
   },
@@ -178,4 +178,4 @@
     "instance_search_error": "Error buscando en {instance}: {message}",
     "no_results_fetch": "No se pueden obtener los resultados de búsqueda"
   }
-} 
+}; 
